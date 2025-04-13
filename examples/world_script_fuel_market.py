@@ -59,15 +59,15 @@ class UpdateForecastBidStrategy(NaiveSingleBidStrategy):
             # for each product, calculate the marginal cost of the unit at the start time of the product
             # and the volume of the product. Dispatch the order to the market.
             start = product[0]
-            
+
             bids.append(
                 {
                     "start_time": start,
                     "end_time": product[1],
                     "only_hours": product[2],
                     # the price we are bidding on the gas market
-                    "price": 10.0 + np.random.randn()*5,
-                    "volume": -unit.max_power, # buy as much as we need
+                    "price": 10.0 + np.random.randn() * 5,
+                    "volume": -unit.max_power,  # buy as much as we need
                     "node": unit.node,
                 }
             )
@@ -79,9 +79,9 @@ class UpdateForecastBidStrategy(NaiveSingleBidStrategy):
         marketconfig: MarketConfig,
         orderbook: Orderbook,
     ):
-        # set the accepted price of one market as the forecasting price of another market        
+        # set the accepted price of one market as the forecasting price of another market
         acc = unit.outputs[f"{marketconfig.product_type}_accepted_price"]
-        
+
         min_start = unit.index[-1]
         max_end = unit.index[0]
         for order in orderbook:
@@ -90,12 +90,14 @@ class UpdateForecastBidStrategy(NaiveSingleBidStrategy):
             if order["end_time"] > max_end:
                 max_end = order["end_time"]
         max_end = max_end - unit.index.freq
-        unit.forecaster["fuel_price_{marketconfig.product_type}"][min_start:max_end] = acc[min_start:max_end]
+        unit.forecaster["fuel_price_{marketconfig.product_type}"][min_start:max_end] = (
+            acc[min_start:max_end]
+        )
 
 
 def init(world, n=1, months=1):
     start = datetime(2019, 1, 1)
-    end = datetime(2019, 1, 1) + timedelta(days=30*months)
+    end = datetime(2019, 1, 1) + timedelta(days=30 * months)
 
     index = FastIndex(start, end, freq="h")
     sim_id = "fuel_market"
@@ -123,17 +125,21 @@ def init(world, n=1, months=1):
         MarketConfig(
             market_id="EOM",
             opening_hours=rr.rrule(
-                rr.HOURLY, interval=1, dtstart=start+timedelta(hours=1), until=end, cache=True
+                rr.HOURLY,
+                interval=1,
+                dtstart=start + timedelta(hours=1),
+                until=end,
+                cache=True,
             ),
             opening_duration=timedelta(hours=1),
             market_mechanism="pay_as_clear",
             market_products=[MarketProduct(timedelta(hours=1), 1, timedelta(hours=1))],
         ),
     ]
-    
+
     for market_config in marketdesign:
         mo_id = market_config.market_id + "_operator"
-        
+
         world.add_market_operator(id=mo_id)
         world.add_market(mo_id, market_config)
 
@@ -199,6 +205,7 @@ def init(world, n=1, months=1):
         },
         coal_forecast,
     )
+
 
 if __name__ == "__main__":
     db_uri = "postgresql://assume:assume@localhost:5432/assume"

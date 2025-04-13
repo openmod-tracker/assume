@@ -30,9 +30,10 @@ logger = logging.getLogger(__name__)
 
 
 class OutputDef(TypedDict):
-    name: str
     value: str
+    ident: str
     from_table: str
+    where_clause: str
 
 
 class WriteOutput(Role):
@@ -115,14 +116,21 @@ class WriteOutput(Role):
             "total_volume": {
                 "value": "sum(demand_volume_energy)",
                 "from_table": "market_meta",
+                "ident": "market_id",
             },
             "capacity_factor": {
                 "value": "avg(power/max_power)",
                 "from_table": 'market_dispatch ud join power_plant_meta um on ud.unit_id = um."index" and ud.simulation=um.simulation',
-                "group_bys": ["market_id", "variable"],
+                "where_clause": "ud.simulation = '%%simulation%%'",
+                "ident": "unit_id",
+            },
+            "total_emission_tons": {
+                "value": "sum(power*emission_factor)",
+                "from_table": 'market_dispatch ud join power_plant_meta um on ud.unit_id = um."index" and ud.simulation=um.simulation',
+                "where_clause": "ud.simulation = '%%simulation%%'",
+                "ident": "unit_id",
             },
         }
-        self.kpi_defs.update(additional_kpis)
 
         # add rl_meta if in learning or evaluation mode
         if self.learning_mode or self.evaluation_mode:
@@ -136,6 +144,29 @@ class WriteOutput(Role):
                     "eval_episode": self.eval_episode,
                 }
             ]
+            learning_kpis = {
+                "sum_reward": {
+                    "value": "sum(reward)",
+                    "from_table": "rl_params",
+                    "where_clause": "simulation = '%%simulation%%' and episode = '%%episode%%'",
+                    "ident": "episode",
+                },
+                "sum_profit": {
+                    "value": "sum(profit)",
+                    "from_table": "rl_params",
+                    "where_clause": "simulation = '%%simulation%%' and episode = '%%episode%%'",
+                    "ident": "episode",
+                },
+                "sum_regret": {
+                    "value": "sum(regret)",
+                    "from_table": "rl_params",
+                    "where_clause": "simulation = '%%simulation%%' and episode = '%%episode%%'",
+                    "ident": "episode",
+                },
+            }
+            self.kpi_defs.update(learning_kpis)
+
+        self.kpi_defs.update(additional_kpis)
 
     def delete_db_scenario(self, simulation_id: str):
         """
@@ -653,26 +684,22 @@ class WriteOutput(Role):
 
         queries = []
         for variable, kpi_def in self.kpi_defs.items():
-            group_bys = ",".join(kpi_def.get("group_bys", ["market_id"]))
-            queries.append(
-                f"select '{variable}' as variable, market_id as ident, {kpi_def['value']} as value from {kpi_def['from_table']} where simulation = '{self.simulation_id}' group by {group_bys}"
+            ident = kpi_def.get("ident", "market_id")
+            where_clause = kpi_def.get("where_clause", "simulation = '%%simulation%%'")
+            where_clause = where_clause.replace(
+                "%%simulation%%", str(self.simulation_id)
             )
-
-        if self.episode:
-            queries.extend(
-                [
-                    f"SELECT 'sum_reward' as variable, simulation as ident, sum(reward) as value FROM rl_params WHERE episode='{self.episode}' AND simulation='{self.simulation_id}' GROUP BY simulation",
-                    f"SELECT 'sum_regret' as variable, simulation as ident, sum(regret) as value FROM rl_params WHERE episode='{self.episode}' AND simulation='{self.simulation_id}' GROUP BY simulation",
-                    f"SELECT 'sum_profit' as variable, simulation as ident, sum(profit) as value FROM rl_params WHERE episode='{self.episode}' AND simulation='{self.simulation_id}' GROUP BY simulation",
-                ]
+            where_clause = where_clause.replace("%%episode%%", str(self.episode))
+            kpi_value = kpi_def["value"]
+            kpi_from = kpi_def["from_table"]
+            queries.append(
+                f"select '{variable}' as variable, {ident} as ident, {kpi_value} as value from {kpi_from} where {where_clause} group by {ident}"
             )
 
         dfs = []
         for query in queries:
             try:
                 df = pd.read_sql(query, self.db)
-            except (ProgrammingError, OperationalError, DataError):
-                continue
             except Exception as e:
                 logger.error("could not read query: %s", e)
                 continue

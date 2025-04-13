@@ -134,7 +134,8 @@ def cli(args=None):
     from assume.scenario.loader_csv import load_scenario_folder, run_learning
 
     try:
-        os.makedirs("./examples/local_db", exist_ok=True)
+        if str(db_uri).startswith("sqlite:///"):
+            os.makedirs("./examples/local_db", exist_ok=True)
 
         if args.parallel:
             distributed_role = True
