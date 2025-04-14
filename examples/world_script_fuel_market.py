@@ -170,10 +170,10 @@ def init(world, months=1):
             "min_power": 0,
             "max_power": 1000,
             "bidding_strategies": {"gas_market": "naive_eom"},
-            "emission_factor": 0.0, # the gas source does not burn the gas
+            "emission_factor": 0.0,  # the gas source does not burn the gas
             "technology": "gas_source",
         },
-        gas_source_forcast
+        gas_source_forcast,
     )
 
     # fuel_price set here does not do anything when using update_forecast strategy

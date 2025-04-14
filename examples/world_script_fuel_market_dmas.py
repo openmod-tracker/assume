@@ -171,10 +171,10 @@ def init(world, n=1, months=1):
             "min_power": 0,
             "max_power": 1000,
             "bidding_strategies": {"gas_market": "naive_eom"},
-            "emission_factor": 0.0, # the gas source does not burn the gas
+            "emission_factor": 0.0,  # the gas source does not burn the gas
             "technology": "gas_source",
         },
-        gas_source_forcast
+        gas_source_forcast,
     )
 
     gas_forecast = NaiveForecast(index, availability=1, fuel_price=3, co2_price=0.1)
@@ -188,7 +188,10 @@ def init(world, n=1, months=1):
             "min_power": 200,
             "max_power": 1000,
             "emission_factor": 0.2,
-            "bidding_strategies": {"EOM": "dmas_powerplant", "gas_market": "update_forecast"},
+            "bidding_strategies": {
+                "EOM": "dmas_powerplant",
+                "gas_market": "update_forecast",
+            },
             "technology": "gas",
             "dynamic_cost": True,
             "ramp_up": 600,
