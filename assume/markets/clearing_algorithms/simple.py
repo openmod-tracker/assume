@@ -48,7 +48,7 @@ class PayAsClearRole(MarketRole):
 
     def clear(
         self, orderbook: Orderbook, market_products
-    ) -> (Orderbook, Orderbook, list[dict]):
+    ) -> tuple[Orderbook, Orderbook, list[dict]]:
         """
         Performs electricity market clearing using a pay-as-clear mechanism. This means that the clearing price is the
         highest price that is still accepted. The clearing price is the same for all accepted orders.
@@ -156,7 +156,7 @@ class PayAsClearRole(MarketRole):
                     max(map(itemgetter("price"), accepted_supply_orders))
                 )
             else:
-                clear_price = 0
+                clear_price = self.marketconfig.maximum_bid_price
 
             accepted_product_orders = accepted_demand_orders + accepted_supply_orders
             for order in accepted_product_orders:
@@ -188,7 +188,7 @@ class PayAsBidRole(MarketRole):
 
     def clear(
         self, orderbook: Orderbook, market_products: list[MarketProduct]
-    ) -> (Orderbook, Orderbook, list[dict]):
+    ) -> tuple[Orderbook, Orderbook, list[dict]]:
         """
         Simulates electricity market clearing using a pay-as-bid mechanism.
 
@@ -285,6 +285,8 @@ class PayAsBidRole(MarketRole):
             for order in product_orders:
                 # if the order was not accepted partially, it is rejected
                 if not order.get("accepted_volume") and order not in rejected_orders:
+                    order["accepted_volume"] = 0
+                    order["accepted_price"] = self.marketconfig.maximum_bid_price
                     rejected_orders.append(order)
 
             accepted_product_orders = accepted_demand_orders + accepted_supply_orders

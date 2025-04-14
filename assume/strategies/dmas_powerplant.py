@@ -535,7 +535,9 @@ class DmasPowerplantStrategy(BaseStrategy):
                 # pwp is on and must runtime is reached
                 if result["power"][0] > 0 and runtime > 0:
                     reduction = 0
-                    hours_needed_to_run = unit.min_operating_time - runtime
+                    hours_needed_to_run = min(
+                        unit.min_operating_time - runtime, hour_count
+                    )
                     hours = (
                         list(range(hours_needed_to_run))
                         if hours_needed_to_run > 0
@@ -650,6 +652,8 @@ class DmasPowerplantStrategy(BaseStrategy):
                             price, power = get_marginal(
                                 p0=last_power[hour], p1=result["power"][hour], t=hour
                             )
+                            if hour >= 1:
+                                hour - 1
                             order_book.update(
                                 {
                                     (block_number, hour, unit.id): (
@@ -759,7 +763,6 @@ class DmasPowerplantStrategy(BaseStrategy):
                     min_price,
                     unit.min_power,
                     last_block,
-                    "generation",
                 )
             last_block = block_number
             block_number += 1
@@ -772,11 +775,11 @@ class DmasPowerplantStrategy(BaseStrategy):
                         prc,
                         vol,
                         last_block,
-                        "generation",
                     )
                     block_number += 1
 
             df_prev = pd.DataFrame.from_dict(prev_order, orient="index")
+            print("helloooooooooooooooooooooooo", prev_order)
             df_prev.columns = ["price", "volume", "link"]
             df_prev.index = pd.MultiIndex.from_tuples(
                 df_prev.index, names=["block_id", "hour", "bid_id"]

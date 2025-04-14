@@ -62,7 +62,7 @@ if __name__ == "__main__":
         world.loop.run_until_complete(worker(world, marketdesign, create_worker, i, n))
     except OSError as e:
         print(e)
-        print("mqtt might not yet be set up? waiting a few seconds")
+        print("mqtt or manager might not yet be set up? waiting a few seconds")
         import time
 
         time.sleep(6)
