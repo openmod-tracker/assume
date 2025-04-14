@@ -784,7 +784,6 @@ class NaiveForecast(Forecaster):
         *args,
         **kwargs,
     ):
-        super().__init__(index)
         self.index = FastIndex(start=index[0], end=index[-1], freq=pd.infer_freq(index))
 
         # Convert attributes to FastSeries if they are not already Series
@@ -836,3 +835,72 @@ class NaiveForecast(Forecaster):
             return self.data_dict[column]
         else:
             return FastSeries(value=0.0, index=self.index)
+
+
+class RandomForecaster(NaiveForecast):
+    """
+    This class represents a forecaster that generates forecasts using random noise. It inherits
+    from the `CsvForecaster` class and initializes with the provided index, power plants, and
+    standard deviation of the noise.
+
+    Attributes:
+        index (pandas.Series): The index of the forecasts.
+        powerplants_units (pandas.DataFrame): The power plants.
+        sigma (float): The standard deviation of the noise.
+
+    Args:
+        index (pandas.Series): The index of the forecasts.
+        powerplants_units (pandas.DataFrame): The power plants.
+        sigma (float): The standard deviation of the noise.
+
+    Example:
+        >>> forecaster = RandomForecaster(index=pd.Series([1, 2, 3]))
+        >>> forecaster.set_forecast(pd.Series([22, 25, 17], name='temperature'), prefix='location_1_')
+        >>> print(forecaster['location_1_temperature'])
+
+    """
+
+    def __init__(
+        self,
+        index: pd.Series,
+        availability: float | list = 1,
+        fuel_price: float | list = 10,
+        co2_price: float | list = 10,
+        demand: float | list = 100,
+        price_forecast: float | list = 50,
+        sigma: float = 0.02,
+        *args,
+        **kwargs,
+    ):
+        super().__init__(
+            index,
+            availability,
+            fuel_price,
+            co2_price,
+            demand,
+            price_forecast,
+            *args,
+            **kwargs,
+        )
+
+        self.sigma = sigma
+
+    def __getitem__(self, column: str) -> FastSeries:
+        """
+        Retrieves forecasted values modified by random noise.
+
+        This method returns the forecast for a given column as a pandas Series modified
+        by random noise based on the provided standard deviation of the noise and the existing
+        forecasts. If the column does not exist in the forecasts, a Series of zeros is returned.
+
+        Args:
+            column (str): The column of the forecast.
+
+        Returns:
+            FastSeries: The forecast modified by random noise.
+
+        """
+        noise = np.random.normal(0, self.sigma, len(self.index))
+        data = super().__getitem__(column)
+        forecast_data = data * noise
+        return FastSeries(index=self.index, value=forecast_data)

@@ -120,15 +120,15 @@ class WriteOutput(Role):
             },
             "capacity_factor": {
                 "value": "avg(power/max_power)",
-                "from_table": 'market_dispatch ud join power_plant_meta um on ud.unit_id = um."index" and ud.simulation=um.simulation',
+                "from_table": 'unit_dispatch ud join power_plant_meta um on ud.unit = um."index" and ud.simulation=um.simulation',
                 "where_clause": "ud.simulation = '%%simulation%%'",
-                "ident": "unit_id",
+                "ident": "unit",
             },
             "total_emission_tons": {
                 "value": "sum(power*emission_factor)",
-                "from_table": 'market_dispatch ud join power_plant_meta um on ud.unit_id = um."index" and ud.simulation=um.simulation',
+                "from_table": 'unit_dispatch ud join power_plant_meta um on ud.unit = um."index" and ud.simulation=um.simulation',
                 "where_clause": "ud.simulation = '%%simulation%%'",
-                "ident": "unit_id",
+                "ident": "unit",
             },
         }
 
