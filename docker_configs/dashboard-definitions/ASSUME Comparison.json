@@ -24,7 +24,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 1,
+  "id": 2,
   "links": [],
   "panels": [
     {
@@ -49,7 +49,7 @@
         "content": "# Welcome to our ASSUME Simulation Comparison Demo\n\nThis is the Grafana Dashboard helps you to compare the results of two simulation. Please note, this dashboard is still under development. Here you can visualize the differences between two simulations. So if some/most of the plots are 0 it just means that the results of your simulation are the same. \n\nYou are currently displaying the difference between:\n##### ${simulation_comp}  -  ${simulation}",
         "mode": "markdown"
       },
-      "pluginVersion": "11.3.1",
+      "pluginVersion": "11.6.0",
       "title": "Overview Dashboard",
       "type": "text"
     },
@@ -87,7 +87,7 @@
         "content": "# Market-specific Data\n\nData specific for the market depending on the choice made at te top of the panel\n\n",
         "mode": "markdown"
       },
-      "pluginVersion": "11.3.1",
+      "pluginVersion": "11.6.0",
       "title": "",
       "type": "text"
     },
@@ -139,8 +139,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -166,11 +165,12 @@
           "showLegend": true
         },
         "tooltip": {
+          "hideZeros": false,
           "mode": "multi",
           "sort": "none"
         }
       },
-      "pluginVersion": "11.3.1",
+      "pluginVersion": "11.6.0",
       "targets": [
         {
           "datasource": {
@@ -238,11 +238,13 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
             "axisPlacement": "left",
             "barAlignment": 0,
+            "barWidthFactor": 0.6,
             "drawStyle": "line",
             "fillOpacity": 1,
             "gradientMode": "none",
@@ -251,6 +253,7 @@
               "tooltip": false,
               "viz": false
             },
+            "insertNulls": false,
             "lineInterpolation": "stepAfter",
             "lineStyle": {
               "fill": "solid"
@@ -275,8 +278,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -344,22 +346,25 @@
           ""
         ],
         "tooltip": {
+          "hideZeros": false,
           "mode": "multi",
           "sort": "none"
         }
       },
+      "pluginVersion": "11.6.0",
       "targets": [
         {
           "datasource": {
             "type": "postgres",
             "uid": "P7B13B9DF907EC40C"
           },
+          "editorMode": "code",
           "format": "table",
           "group": [],
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "select sim1.\"time\", sim2.\"Demand Volume\" - sim1.\"Demand Volume\" as \"Demand Volume Difference\", sim2.\"Supply Volume\" - sim1.\"Supply Volume\" as \"Supply Volume Difference\" from (\nSELECT\n  product_start AS \"time\",\n  demand_volume AS \"Demand Volume\",\n  supply_volume AS \"Supply Volume\"\nFROM market_meta\nWHERE (\"simulation\" LIKE '$simulation') AND (\"market_id\" LIKE '$market') AND $__timeFilter(product_start)\nGROUP BY market_id, simulation, product_start, demand_volume, supply_volume\nORDER BY 1\n) sim1\njoin (\nSELECT\n  product_start AS \"time\",\n  demand_volume AS \"Demand Volume\",\n  supply_volume AS \"Supply Volume\"\nFROM market_meta\nWHERE (\"simulation\" LIKE '$simulation_comp') AND (\"market_id\" LIKE '$market') AND $__timeFilter(product_start)\nGROUP BY market_id, simulation, product_start, demand_volume, supply_volume\nORDER BY 1\n) sim2 on sim1.\"Demand Volume\" = sim2.\"Demand Volume\"",
+          "rawSql": "select sim1.\"time\", sim2.\"Demand Volume\" - sim1.\"Demand Volume\" as \"Demand Volume Difference\", sim2.\"Supply Volume\" - sim1.\"Supply Volume\" as \"Supply Volume Difference\" from (\nSELECT\n  product_start AS \"time\",\n  demand_volume AS \"Demand Volume\",\n  supply_volume AS \"Supply Volume\"\nFROM market_meta\nWHERE (\"simulation\" LIKE '$simulation') AND (\"market_id\" LIKE '$market') AND $__timeFilter(product_start)\nGROUP BY market_id, simulation, product_start, demand_volume, supply_volume\nORDER BY 1\n) sim1\njoin (\nSELECT\n  product_start AS \"time\",\n  demand_volume AS \"Demand Volume\",\n  supply_volume AS \"Supply Volume\"\nFROM market_meta\nWHERE (\"simulation\"='$simulation_comp') AND (\"market_id\"='$market') AND $__timeFilter(product_start)\nGROUP BY market_id, simulation, product_start, demand_volume, supply_volume\nORDER BY 1\n) sim2 on sim1.\"Demand Volume\" = sim2.\"Demand Volume\"",
           "refId": "Volume",
           "select": [
             [
@@ -371,6 +376,23 @@
               }
             ]
           ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
           "table": "market_meta",
           "timeColumn": "product_start",
           "timeColumnType": "timestamp",
@@ -468,8 +490,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -496,17 +517,19 @@
           "showLegend": true
         },
         "tooltip": {
+          "hideZeros": false,
           "mode": "single",
           "sort": "none"
         }
       },
-      "pluginVersion": "11.3.1",
+      "pluginVersion": "11.6.0",
       "targets": [
         {
           "datasource": {
             "type": "postgres",
             "uid": "P7B13B9DF907EC40C"
           },
+          "editorMode": "code",
           "format": "time_series",
           "group": [
             {
@@ -525,7 +548,7 @@
           ],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "select sim1.\"time\", sim2.\" \" - sim1.\" \" as \"Price\", sim1.bid_id from (\nSELECT\n  $__timeGroupAlias(start_time,$__interval),\n  avg(accepted_price) AS \" \",\n  case\n    when bid_type isnull then concat(unit_id, '_SB')\n    when bid_type != '' then concat(unit_id, '_', bid_type)\n  end AS \"bid_id\"\nFROM market_orders\nWHERE\n  $__timeFilter(start_time) AND\n  market_id = '$market' AND\n  simulation = '$simulation'\nGROUP BY 1, unit_id, bid_type\nORDER BY 1\n) sim1\njoin (\nSELECT\n  $__timeGroupAlias(start_time,$__interval),\n  avg(accepted_price) AS \" \",\n  case\n    when bid_type isnull then concat(unit_id, '_SB')\n    when bid_type != '' then concat(unit_id, '_', bid_type)\n  end AS \"bid_id\"\nFROM market_orders\nWHERE\n  $__timeFilter(start_time) AND\n  market_id = '$market' AND\n  simulation = '$simulation'\nGROUP BY 1, unit_id, bid_type\nORDER BY 1) sim2\non sim1.time = sim2.time and sim1.bid_id = sim2.bid_id",
+          "rawSql": "select sim1.\"time\", sim2.\"accepted_price\" - sim1.\"accepted_price\" as \"Price\", sim1.bid_id from (\nSELECT\n  $__timeGroupAlias(start_time,$__interval),\n  avg(accepted_price) AS \"accepted_price\",\n  case\n    when bid_type isnull then concat(unit_id, '_SB')\n    when bid_type != '' then concat(unit_id, '_', bid_type)\n  end AS \"bid_id\"\nFROM market_orders\nWHERE\n  $__timeFilter(start_time) AND\n  market_id = '$market' AND\n  simulation = '$simulation'\nGROUP BY 1, unit_id, bid_type\nORDER BY 1\n) sim1\njoin (\nSELECT\n  $__timeGroupAlias(start_time,$__interval),\n  avg(accepted_price) AS \"accepted_price\",\n  case\n    when bid_type isnull then concat(unit_id, '_SB')\n    when bid_type != '' then concat(unit_id, '_', bid_type)\n  end AS \"bid_id\"\nFROM market_orders\nWHERE\n  $__timeFilter(start_time) AND\n  market_id = '$market' AND\n  simulation = '$simulation_comp'\nGROUP BY 1, unit_id, bid_type\nORDER BY 1) sim2\non sim1.time = sim2.time and sim1.bid_id = sim2.bid_id",
           "refId": "A",
           "select": [
             [
@@ -563,6 +586,23 @@
               }
             ]
           ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
           "table": "market_orders",
           "timeColumn": "start_time",
           "timeColumnType": "timestamp",
@@ -647,8 +687,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -677,17 +716,19 @@
           "showLegend": true
         },
         "tooltip": {
+          "hideZeros": false,
           "mode": "multi",
           "sort": "desc"
         }
       },
-      "pluginVersion": "11.3.1",
+      "pluginVersion": "11.6.0",
       "targets": [
         {
           "datasource": {
             "type": "postgres",
             "uid": "P7B13B9DF907EC40C"
           },
+          "editorMode": "code",
           "format": "time_series",
           "group": [
             {
@@ -706,7 +747,7 @@
           ],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "select sim1.\"time\", sim2.\" \" - sim1.\" \" as \"Volume\", sim1.bid_id from (\nSELECT\n  $__timeGroupAlias(start_time,$__interval),\n  avg(volume) AS \" \",\n  case\n    when bid_type isnull then concat(unit_id, '_SB')\n    when bid_type != '' then concat(unit_id, '_', bid_type)\n  end AS \"bid_id\"\nFROM market_orders\nWHERE\n  $__timeFilter(start_time) AND\n  market_id = '$market' AND\n  simulation = '$simulation'\nGROUP BY 1, unit_id, bid_type\nORDER BY 1\n) sim1 \njoin (\nSELECT\n  $__timeGroupAlias(start_time,$__interval),\n  avg(volume) AS \" \",\n  case\n    when bid_type isnull then concat(unit_id, '_SB')\n    when bid_type != '' then concat(unit_id, '_', bid_type)\n  end AS \"bid_id\"\nFROM market_orders\nWHERE\n  $__timeFilter(start_time) AND\n  market_id = '$market' AND\n  simulation = '$simulation'\nGROUP BY 1, unit_id, bid_type\nORDER BY 1\n) sim2 on sim1.time = sim2.time and sim1.bid_id = sim2.bid_id",
+          "rawSql": "select sim1.\"time\", sim2.\" \" - sim1.\" \" as \"Volume\", sim1.bid_id from (\nSELECT\n  $__timeGroupAlias(start_time,$__interval),\n  avg(volume) AS \" \",\n  case\n    when bid_type isnull then unit_id\n    when bid_type != '' then concat(unit_id, '_', bid_type)\n  end AS \"bid_id\"\nFROM market_orders\nWHERE\n  $__timeFilter(start_time) AND\n  market_id = '$market' AND\n  simulation = '$simulation'\nGROUP BY 1, unit_id, bid_type\nORDER BY 1\n) sim1 \njoin (\nSELECT\n  $__timeGroupAlias(start_time,$__interval),\n  avg(volume) AS \" \",\n  case\n    when bid_type isnull then unit_id\n    when bid_type != '' then concat(unit_id, '_', bid_type)\n  end AS \"bid_id\"\nFROM market_orders\nWHERE\n  $__timeFilter(start_time) AND\n  market_id = '$market' AND\n  simulation = '$simulation_comp'\nGROUP BY 1, unit_id, bid_type\nORDER BY 1\n) sim2 on sim1.time = sim2.time and sim1.bid_id = sim2.bid_id",
           "refId": "A",
           "select": [
             [
@@ -744,6 +785,23 @@
               }
             ]
           ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
           "table": "market_orders",
           "timeColumn": "start_time",
           "timeColumnType": "timestamp",
@@ -828,8 +886,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -896,6 +953,7 @@
         "showValue": "never",
         "stacking": "none",
         "tooltip": {
+          "hideZeros": false,
           "mode": "multi",
           "sort": "none"
         },
@@ -903,7 +961,7 @@
         "xTickLabelRotation": 0,
         "xTickLabelSpacing": 0
       },
-      "pluginVersion": "11.3.1",
+      "pluginVersion": "11.6.0",
       "targets": [
         {
           "datasource": {
@@ -961,8 +1019,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -1024,7 +1081,7 @@
           }
         ]
       },
-      "pluginVersion": "11.3.1",
+      "pluginVersion": "11.6.0",
       "targets": [
         {
           "datasource": {
@@ -1112,11 +1169,12 @@
           "values": true
         },
         "tooltip": {
+          "hideZeros": false,
           "mode": "single",
           "sort": "none"
         }
       },
-      "pluginVersion": "11.3.1",
+      "pluginVersion": "11.6.0",
       "targets": [
         {
           "datasource": {
@@ -1209,7 +1267,7 @@
         "content": "# Unit Specific Data\n\nFor the chosen market and the chosen unit here the dispatch is displayed.",
         "mode": "markdown"
       },
-      "pluginVersion": "11.3.1",
+      "pluginVersion": "11.6.0",
       "title": "",
       "type": "text"
     },
@@ -1264,8 +1322,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -1292,11 +1349,12 @@
           "showLegend": true
         },
         "tooltip": {
+          "hideZeros": false,
           "mode": "multi",
           "sort": "desc"
         }
       },
-      "pluginVersion": "11.3.1",
+      "pluginVersion": "11.6.0",
       "targets": [
         {
           "datasource": {
@@ -1415,8 +1473,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -1452,7 +1509,7 @@
         "styles": "",
         "wrap": true
       },
-      "pluginVersion": "5.4.0",
+      "pluginVersion": "5.7.0",
       "targets": [
         {
           "datasource": {
@@ -1539,8 +1596,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -1580,11 +1636,12 @@
           "showLegend": true
         },
         "tooltip": {
+          "hideZeros": false,
           "mode": "multi",
           "sort": "desc"
         }
       },
-      "pluginVersion": "11.3.1",
+      "pluginVersion": "11.6.0",
       "targets": [
         {
           "datasource": {
@@ -1717,7 +1774,7 @@
         "content": "# Unit Specific Data\n\nFor the chosen market and the chosen unit here the dispatch is displayed.",
         "mode": "markdown"
       },
-      "pluginVersion": "11.3.1",
+      "pluginVersion": "11.6.0",
       "title": "",
       "type": "text"
     },
@@ -1769,8 +1826,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -1797,11 +1853,12 @@
           "showLegend": true
         },
         "tooltip": {
+          "hideZeros": false,
           "mode": "multi",
           "sort": "desc"
         }
       },
-      "pluginVersion": "11.3.1",
+      "pluginVersion": "11.6.0",
       "targets": [
         {
           "datasource": {
@@ -1901,8 +1958,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -1938,7 +1994,7 @@
         "styles": "",
         "wrap": true
       },
-      "pluginVersion": "5.4.0",
+      "pluginVersion": "5.7.0",
       "targets": [
         {
           "datasource": {
@@ -2247,7 +2303,7 @@
   ],
   "preload": false,
   "refresh": "",
-  "schemaVersion": 40,
+  "schemaVersion": 41,
   "tags": [],
   "templating": {
     "list": [
@@ -2273,8 +2329,8 @@
       },
       {
         "current": {
-          "text": "example_01a_base",
-          "value": "example_01a_base"
+          "text": "handmade_simulation_tcp20",
+          "value": "handmade_simulation_tcp20"
         },
         "datasource": {
           "type": "postgres",
@@ -2314,10 +2370,10 @@
       {
         "current": {
           "text": [
-            "Unit 1"
+            "nuclear12 0"
           ],
           "value": [
-            "Unit 1"
+            "nuclear12 0"
           ]
         },
         "datasource": {
@@ -2339,10 +2395,10 @@
       {
         "current": {
           "text": [
-            "demand_EOM"
+            "demand0"
           ],
           "value": [
-            "demand_EOM"
+            "demand0"
           ]
         },
         "datasource": {
@@ -2385,13 +2441,12 @@
     ]
   },
   "time": {
-    "from": "2019-02-28T23:00:00.000Z",
-    "to": "2019-04-01T21:59:59.000Z"
+    "from": "2019-01-01T00:00:00.000Z",
+    "to": "2019-02-13T00:00:00.000Z"
   },
   "timepicker": {},
   "timezone": "",
   "title": "ASSUME: Compare scenarios",
   "uid": "vP8U8-q4k",
-  "version": 5,
-  "weekStart": ""
+  "version": 1
 }

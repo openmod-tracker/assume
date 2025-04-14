@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Florian Maurer
+# SPDX-FileCopyrightText: ASSUME Developers
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -80,7 +80,7 @@ class UpdateForecastBidStrategy(NaiveSingleBidStrategy):
         orderbook: Orderbook,
     ):
         # set the accepted price of one market as the forecasting price of another market
-        acc = unit.outputs[f"{marketconfig.product_type}_accepted_price"]
+        acc_price = unit.outputs[f"{marketconfig.product_type}_accepted_price"]
 
         min_start = unit.index[-1]
         max_end = unit.index[0]
@@ -91,16 +91,16 @@ class UpdateForecastBidStrategy(NaiveSingleBidStrategy):
                 max_end = order["end_time"]
         max_end = max_end - unit.index.freq
         unit.forecaster["fuel_price_{marketconfig.product_type}"][min_start:max_end] = (
-            acc[min_start:max_end]
+            acc_price[min_start:max_end]
         )
 
 
-def init(world, months=1):
+def init(world, n=1, months=1):
     start = datetime(2019, 1, 1)
     end = datetime(2019, 1, 1) + timedelta(days=30 * months)
 
     index = FastIndex(start, end, freq="h")
-    sim_id = "fuel_market"
+    sim_id = "fuel_market_dmas"
 
     world.setup(
         start=start,
@@ -115,11 +115,11 @@ def init(world, months=1):
         MarketConfig(
             market_id="gas_market",
             opening_hours=rr.rrule(
-                rr.HOURLY, interval=1, dtstart=start, until=end, cache=True
+                rr.HOURLY, interval=24, dtstart=start, until=end, cache=True
             ),
             opening_duration=timedelta(hours=1),
             market_mechanism="pay_as_clear",
-            market_products=[MarketProduct(timedelta(hours=1), 1, timedelta(hours=2))],
+            market_products=[MarketProduct(timedelta(hours=1), 24, timedelta(hours=2))],
             maximum_bid_price=1000,
             product_type="gas",
         ),
@@ -127,14 +127,15 @@ def init(world, months=1):
             market_id="EOM",
             opening_hours=rr.rrule(
                 rr.HOURLY,
-                interval=1,
+                interval=24,
                 dtstart=start + timedelta(hours=1),
                 until=end,
                 cache=True,
             ),
-            opening_duration=timedelta(hours=1),
-            market_mechanism="pay_as_clear",
-            market_products=[MarketProduct(timedelta(hours=1), 1, timedelta(hours=1))],
+            opening_duration=timedelta(hours=24),
+            market_mechanism="pay_as_clear_complex_dmas",
+            market_products=[MarketProduct(timedelta(hours=1), 24, timedelta(hours=1))],
+            additional_fields=["link", "block_id", "exclusive_id"],
         ),
     ]
 
@@ -160,7 +161,7 @@ def init(world, months=1):
     )
 
     world.add_unit_operator("gas_source")
-    fp = np.random.rand(len(index)) * 26
+    fp = np.random.rand(len(index)) * 20
     gas_source_forcast = NaiveForecast(index, demand=1000, fuel_price=fp)
     world.add_unit(
         "gas_source1",
@@ -176,8 +177,7 @@ def init(world, months=1):
         gas_source_forcast
     )
 
-    # fuel_price set here does not do anything when using update_forecast strategy
-    gas_forecast = NaiveForecast(index, availability=1, fuel_price=0, co2_price=0.1)
+    gas_forecast = NaiveForecast(index, availability=1, fuel_price=3, co2_price=0.1)
     i = 1
     world.add_unit_operator(f"my_operator{i}")
     world.add_unit(
@@ -188,17 +188,19 @@ def init(world, months=1):
             "min_power": 200,
             "max_power": 1000,
             "emission_factor": 0.2,
-            "bidding_strategies": {"EOM": "naive_eom", "gas_market": "update_forecast"},
+            "bidding_strategies": {"EOM": "dmas_powerplant", "gas_market": "update_forecast"},
             "technology": "gas",
             "dynamic_cost": True,
             "ramp_up": 600,
             "ramp_down": 600,
+            "min_down_time": 2,
+            "min_operating_time": 2,
         },
         gas_forecast,
     )
 
     i = 2
-    coal_forecast = NaiveForecast(index, availability=1, fuel_price=11.6, co2_price=0.1)
+    coal_forecast = NaiveForecast(index, availability=1, fuel_price=8, co2_price=0.1)
     world.add_unit_operator(f"my_operator{i}")
     world.add_unit(
         f"coal{i}",
@@ -208,10 +210,12 @@ def init(world, months=1):
             "min_power": 200,
             "max_power": 1000,
             "emission_factor": 0.4,
-            "bidding_strategies": {"EOM": "flexable_eom"},
+            "bidding_strategies": {"EOM": "dmas_powerplant"},
             "technology": "hard coal",
             "ramp_up": 400,
             "ramp_down": 400,
+            "min_down_time": 4,
+            "min_operating_time": 4,
         },
         coal_forecast,
     )
