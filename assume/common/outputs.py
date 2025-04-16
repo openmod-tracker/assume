@@ -130,7 +130,7 @@ class WriteOutput(Role):
                 "where_clause": "ud.simulation = '%%simulation%%'",
                 "ident": "unit",
             },
-            "lcoe": {
+            "market_value": {
                 "value": "avg(coalesce(energy_cashflow,0)/coalesce(NULLIF(power,0), 1))",
                 "from_table": 'unit_dispatch',
                 "ident": "unit",

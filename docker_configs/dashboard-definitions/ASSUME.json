@@ -24,7 +24,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 7,
+  "id": 5,
   "links": [],
   "panels": [
     {
@@ -1491,6 +1491,18 @@
                 "value": "right"
               }
             ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "lcoe"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "€/MWh"
+              }
+            ]
           }
         ]
       },
@@ -1536,7 +1548,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "select * from (\n  SELECT\n    ident,\n    avg(round(CAST(value AS numeric), 2))  FILTER (WHERE variable = 'total_emission_tons') as total_emission_tons,\n    sum(round(CAST(value AS numeric), 2))  FILTER (WHERE variable = 'capacity_factor') as capacity_factor\n  FROM kpis\n  where simulation='$simulation'\n  group by simulation, ident\n  ORDER BY simulation\n) a where \"total_emission_tons\" is not NULL",
+          "rawSql": "select * from (\n  SELECT\n    ident,\n    avg(round(CAST(value AS numeric), 2))  FILTER (WHERE variable = 'total_emission_tons') as total_emission_tons,\n    avg(round(CAST(value AS numeric), 2))  FILTER (WHERE variable = 'lcoe') as lcoe,\n    sum(round(CAST(value AS numeric), 2))  FILTER (WHERE variable = 'capacity_factor') as capacity_factor\n  FROM kpis\n  where simulation='$simulation'\n  group by simulation, ident\n  ORDER BY simulation\n) a where \"total_emission_tons\" is not NULL",
           "refId": "A",
           "select": [
             [
@@ -2061,7 +2073,7 @@
           "format": "time_series",
           "hide": false,
           "rawQuery": true,
-          "rawSql": "SELECT\n  $__timeGroupAlias(time,$__interval),\n  avg(power) AS \"Actual dispatch\",\n  unit\nFROM unit_dispatch\nWHERE\n  $__timeFilter(time) AND\n  simulation = '$simulation' AND\n  unit in ($Gen_Units)\nGROUP BY 1, unit\nORDER BY 1",
+          "rawSql": "SELECT\n  $__timeGroupAlias(time,$__interval),\n  avg(gas) AS \"Actual dispatch\",\n  unit\nFROM unit_dispatch\nWHERE\n  $__timeFilter(time) AND\n  simulation = '$simulation' AND\n  unit in ($Gen_Units)\nGROUP BY 1, unit\nORDER BY 1",
           "refId": "B",
           "sql": {
             "columns": [
@@ -2527,6 +2539,7 @@
             "type": "postgres",
             "uid": "P7B13B9DF907EC40C"
           },
+          "editorMode": "code",
           "format": "time_series",
           "group": [],
           "metricColumn": "none",
@@ -2543,6 +2556,23 @@
               }
             ]
           ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
           "table": "market_dispatch",
           "timeColumn": "datetime",
           "timeColumnType": "timestamp",
@@ -2855,12 +2885,13 @@
           "showLegend": true
         },
         "tooltip": {
+          "hideZeros": false,
           "maxHeight": 600,
           "mode": "single",
           "sort": "none"
         }
       },
-      "pluginVersion": "11.4.0",
+      "pluginVersion": "11.6.0",
       "targets": [
         {
           "datasource": {
@@ -3008,12 +3039,13 @@
           "showLegend": true
         },
         "tooltip": {
+          "hideZeros": false,
           "maxHeight": 600,
           "mode": "multi",
           "sort": "desc"
         }
       },
-      "pluginVersion": "11.4.0",
+      "pluginVersion": "11.6.0",
       "targets": [
         {
           "datasource": {
@@ -3126,20 +3158,7 @@
         "uid": "P7B13B9DF907EC40C"
       },
       "fieldConfig": {
-        "defaults": {
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green"
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
+        "defaults": {},
         "overrides": []
       },
       "gridPos": {
@@ -3167,7 +3186,7 @@
         "styles": "",
         "wrap": true
       },
-      "pluginVersion": "5.6.0",
+      "pluginVersion": "11.6.0",
       "targets": [
         {
           "datasource": {
@@ -3316,12 +3335,13 @@
           "showLegend": true
         },
         "tooltip": {
+          "hideZeros": false,
           "maxHeight": 600,
           "mode": "multi",
           "sort": "desc"
         }
       },
-      "pluginVersion": "11.4.0",
+      "pluginVersion": "11.6.0",
       "targets": [
         {
           "datasource": {
@@ -3510,7 +3530,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.4.0",
+      "pluginVersion": "11.6.0",
       "targets": [
         {
           "datasource": {
@@ -3675,12 +3695,13 @@
           "showLegend": true
         },
         "tooltip": {
+          "hideZeros": false,
           "maxHeight": 600,
           "mode": "multi",
           "sort": "none"
         }
       },
-      "pluginVersion": "11.4.0",
+      "pluginVersion": "11.6.0",
       "targets": [
         {
           "datasource": {
@@ -3787,7 +3808,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.4.0",
+      "pluginVersion": "11.6.0",
       "targets": [
         {
           "datasource": {
@@ -3895,7 +3916,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.4.0",
+      "pluginVersion": "11.6.0",
       "targets": [
         {
           "datasource": {
@@ -4048,12 +4069,13 @@
           "showLegend": true
         },
         "tooltip": {
+          "hideZeros": false,
           "maxHeight": 600,
           "mode": "multi",
           "sort": "none"
         }
       },
-      "pluginVersion": "11.4.0",
+      "pluginVersion": "11.6.0",
       "targets": [
         {
           "datasource": {
@@ -4201,12 +4223,13 @@
           "showLegend": true
         },
         "tooltip": {
+          "hideZeros": false,
           "maxHeight": 600,
           "mode": "multi",
           "sort": "desc"
         }
       },
-      "pluginVersion": "11.4.0",
+      "pluginVersion": "11.6.0",
       "targets": [
         {
           "datasource": {
@@ -4319,20 +4342,7 @@
         "uid": "P7B13B9DF907EC40C"
       },
       "fieldConfig": {
-        "defaults": {
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green"
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
+        "defaults": {},
         "overrides": []
       },
       "gridPos": {
@@ -4360,7 +4370,7 @@
         "styles": "",
         "wrap": true
       },
-      "pluginVersion": "5.6.0",
+      "pluginVersion": "11.6.0",
       "targets": [
         {
           "datasource": {
@@ -4478,12 +4488,13 @@
           "showLegend": true
         },
         "tooltip": {
+          "hideZeros": false,
           "maxHeight": 600,
           "mode": "single",
           "sort": "none"
         }
       },
-      "pluginVersion": "11.4.0",
+      "pluginVersion": "11.6.0",
       "targets": [
         {
           "datasource": {
@@ -4632,12 +4643,13 @@
           "showLegend": true
         },
         "tooltip": {
+          "hideZeros": false,
           "maxHeight": 600,
           "mode": "multi",
           "sort": "desc"
         }
       },
-      "pluginVersion": "11.4.0",
+      "pluginVersion": "11.6.0",
       "targets": [
         {
           "datasource": {
@@ -4861,12 +4873,13 @@
           "showLegend": true
         },
         "tooltip": {
+          "hideZeros": false,
           "maxHeight": 600,
           "mode": "multi",
           "sort": "none"
         }
       },
-      "pluginVersion": "11.4.0",
+      "pluginVersion": "11.6.0",
       "targets": [
         {
           "datasource": {
@@ -5056,7 +5069,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.4.0",
+      "pluginVersion": "11.6.0",
       "targets": [
         {
           "datasource": {
@@ -5219,12 +5232,13 @@
           "showLegend": true
         },
         "tooltip": {
+          "hideZeros": false,
           "maxHeight": 600,
           "mode": "multi",
           "sort": "none"
         }
       },
-      "pluginVersion": "11.4.0",
+      "pluginVersion": "11.6.0",
       "targets": [
         {
           "datasource": {
@@ -5289,8 +5303,8 @@
     "list": [
       {
         "current": {
-          "text": "example_01a_base",
-          "value": "example_01a_base"
+          "text": "fuel_market",
+          "value": "fuel_market"
         },
         "datasource": {
           "type": "postgres",
@@ -5330,10 +5344,10 @@
       {
         "current": {
           "text": [
-            "Unit 1"
+            "gas_source1"
           ],
           "value": [
-            "Unit 1"
+            "gas_source1"
           ]
         },
         "datasource": {
@@ -5355,10 +5369,10 @@
       {
         "current": {
           "text": [
-            "demand_EOM"
+            "demand1"
           ],
           "value": [
-            "demand_EOM"
+            "demand1"
           ]
         },
         "datasource": {
@@ -5400,8 +5414,8 @@
       },
       {
         "current": {
-          "text": "2019-01-01 10:00:00",
-          "value": "2019-01-01 10:00:00"
+          "text": "2019-01-01 02:00:00",
+          "value": "2019-01-01 02:00:00"
         },
         "definition": "select min(start_time)::text from market_orders where market_id = '$market' AND\n      simulation = '$simulation' and $__timeFilter(start_time)",
         "description": "The minimum time we have in the time range.\nUsed for the merit order plot title",
@@ -5416,8 +5430,8 @@
     ]
   },
   "time": {
-    "from": "2019-01-01T00:00:00.000Z",
-    "to": "2019-01-31T23:59:59.000Z"
+    "from": "2018-12-16T12:00:00.500Z",
+    "to": "2019-02-16T11:59:58.500Z"
   },
   "timepicker": {
     "refresh_intervals": [

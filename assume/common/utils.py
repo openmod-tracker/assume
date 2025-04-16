@@ -87,7 +87,7 @@ def get_available_products(market_products: list[MarketProduct], startdate: date
     for product in market_products:
         start = startdate + product.first_delivery
         if isinstance(product.duration, rr.rrule):
-            starts = list(product.duration.xafter(start, product.count + 1), inc=True)
+            starts = list(product.duration.xafter(start, product.count + 1, inc=True))
             for i in range(product.count):
                 period_start = starts[i]
                 period_end = starts[i + 1]

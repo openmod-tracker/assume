@@ -7,6 +7,7 @@ import math
 from itertools import groupby
 from operator import itemgetter
 
+from dateutil.rrule import rrule
 from mango import AgentAddress, Performatives, Role, create_acl, sender_addr
 
 from assume.common.market_objects import (
@@ -54,11 +55,15 @@ class MarketMechanism:
         self.marketconfig = marketconfig
         # calculate last possible market opening as the difference between the market end
         # and the length of the longest product plus the delivery time of the products
-        self.last_market_opening = marketconfig.opening_hours._until - max(
-            market_product.duration * market_product.count
-            + market_product.first_delivery
-            for market_product in marketconfig.market_products
-        )
+        if isinstance(marketconfig.market_products[0].duration, rrule):
+            self.last_market_opening = marketconfig.opening_hours._until
+            # TODO
+        else:
+            self.last_market_opening = marketconfig.opening_hours._until - max(
+                market_product.duration * market_product.count
+                + market_product.first_delivery
+                for market_product in marketconfig.market_products
+            )
 
     def clear(
         self, orderbook: Orderbook, market_products: list[MarketProduct]
