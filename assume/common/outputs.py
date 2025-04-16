@@ -130,6 +130,11 @@ class WriteOutput(Role):
                 "where_clause": "ud.simulation = '%%simulation%%'",
                 "ident": "unit",
             },
+            "lcoe": {
+                "value": "avg(coalesce(energy_cashflow,0)/coalesce(NULLIF(power,0), 1))",
+                "from_table": 'unit_dispatch',
+                "ident": "unit",
+            },
         }
 
         # add rl_meta if in learning or evaluation mode
