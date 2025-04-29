@@ -28,7 +28,7 @@ def init(world: World):
         end=end + timedelta(hours=24),
         freq="h",
     )
-    sim_id = "world_script_policy"
+    simulation_id = "world_script_policy"
 
     world.clearing_mechanisms["pay_as_bid_contract"] = PayAsBidContractRole
     from assume.strategies.extended import SupportStrategy
@@ -39,7 +39,7 @@ def init(world: World):
         start=start,
         end=end,
         save_frequency_hours=48,
-        simulation_id=sim_id,
+        simulation_id=simulation_id,
     )
     contract_types = ["MPFIX"]
 
@@ -71,11 +71,11 @@ def init(world: World):
             param_dict={"allowed_contracts": ["MPVAR", "MPFIX", "CFD"]},
         ),
         MarketConfig(
-            "SupportEnergy",
-            rr.rrule(rr.MONTHLY, dtstart=start, until=end),
-            timedelta(hours=1),
-            "pay_as_bid_contract",
-            [MarketProduct(rd(days=28), 1, timedelta(days=0))],
+            market_id="SupportEnergy",
+            opening_hours=rr.rrule(rr.MONTHLY, dtstart=start, until=end),
+            opening_duration=timedelta(hours=1),
+            market_mechanism="pay_as_bid_contract",
+            market_products=[MarketProduct(rd(days=28), 1, timedelta(days=0))],
             additional_fields=[
                 "sender_id",
                 "contract",  # one of FIT, PPA
@@ -86,6 +86,10 @@ def init(world: World):
             product_type="energy",
             supports_get_unmatched=True,
             param_dict={"allowed_contracts": ["FIT", "PPA"]},
+            volume_unit="MW",
+            price_unit="€/MWh",
+            maximum_bid_price=9999,
+            maximum_bid_volume=9999,
         ),
     ]
 

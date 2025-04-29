@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import TypedDict
 
 import numpy as np
@@ -141,7 +141,7 @@ class BaseUnit:
     ) -> None:
         """
         Iterates through the orderbook, adding the accepted volumes to the corresponding time slots
-        in the dispatch plan. It then calculates the cashflow and the reward for the bidding strategies.
+        in the dispatch plan.
 
         Args:
             marketconfig (MarketConfig): The market configuration.
@@ -172,6 +172,20 @@ class BaseUnit:
                 accepted_price
             )
 
+    def calculate_cashflow_and_reward(
+        self,
+        marketconfig: MarketConfig,
+        orderbook: Orderbook,
+    ) -> None:
+        """
+        Calculates the cashflow and the reward for the given unit.
+
+        Args:
+            marketconfig (MarketConfig): The market configuration.
+            orderbook (Orderbook): The orderbook.
+        """
+
+        product_type = marketconfig.product_type
         self.calculate_cashflow(product_type, orderbook)
 
         self.bidding_strategies[marketconfig.market_id].calculate_reward(
@@ -196,18 +210,17 @@ class BaseUnit:
         if start not in self.index:
             start = self.index[0]
 
-        product_type_mc = product_type + "_marginal_costs"
         # Adjusted code for accessing product data and mapping over the index
-        product_data = self.outputs[product_type].loc[
-            start:end
-        ]  # Slicing directly without `.loc`
+        product_data = self.outputs[product_type].loc[start:end]
 
         marginal_costs = [
             self.calculate_marginal_cost(t, product_data[idx])
             for idx, t in enumerate(self.index[start:end])
         ]
-        new_values = np.abs(marginal_costs * product_data)
-        self.outputs[product_type_mc].loc[start:end] = new_values
+        generation_costs = np.abs(marginal_costs * product_data)
+        self.outputs[f"{product_type}_generation_costs"].loc[start:end] = (
+            generation_costs
+        )
 
     def execute_current_dispatch(
         self,
@@ -307,7 +320,7 @@ class BaseUnit:
 
     def reset_saved_rl_data(self):
         """
-        Resets the saved RL data.
+        Resets the saved RL data. This deletes all data besides the observation and action where we do not yet have calculated reward values.
         """
         values_len = len(self.outputs["rl_rewards"])
 
@@ -497,7 +510,7 @@ class SupportsMinMaxCharge(BaseUnit):
     efficiency_discharge: float
 
     def calculate_min_max_charge(
-        self, start: datetime, end: datetime, product_type="energy"
+        self, start: datetime, end: datetime, soc: float = None
     ) -> tuple[np.array, np.array]:
         """
         Calculates the min and max charging power for the given time period.
@@ -505,14 +518,14 @@ class SupportsMinMaxCharge(BaseUnit):
         Args:
             start (datetime.datetime): The start time of the dispatch.
             end (datetime.datetime): The end time of the dispatch.
-            product_type (str, optional): The product type of the unit. Defaults to "energy".
+            soc (float, optional): The current state-of-charge. Defaults to None.
 
         Returns:
             tuple[np.array, np.array]: The min and max charging power for the given time period.
         """
 
     def calculate_min_max_discharge(
-        self, start: datetime, end: datetime, product_type="energy"
+        self, start: datetime, end: datetime, soc: float = None
     ) -> tuple[np.array, np.array]:
         """
         Calculates the min and max discharging power for the given time period.
@@ -520,28 +533,11 @@ class SupportsMinMaxCharge(BaseUnit):
         Args:
             start (datetime.datetime): The start time of the dispatch.
             end (datetime.datetime): The end time of the dispatch.
-            product_type (str, optional): The product type of the unit. Defaults to "energy".
+            soc (float, optional): The current state-of-charge. Defaults to None.
 
         Returns:
             tuple[np.array, np.array]: The min and max discharging power for the given time period.
         """
-
-    def get_soc_before(self, dt: datetime) -> float:
-        """
-        Returns the State of Charge (SoC) before the given datetime.
-        If datetime is before the start of the index, the initial SoC is returned.
-        The SoC is a float between 0 and 1.
-
-        Args:
-            dt (datetime.datetime): The current datetime.
-
-        Returns:
-            float: The SoC before the given datetime.
-        """
-        if dt - self.index.freq < self.index[0]:
-            return self.initial_soc
-        else:
-            return self.outputs["soc"].at[dt - self.index.freq]
 
     def calculate_ramp_discharge(
         self,
@@ -640,6 +636,55 @@ class SupportsMinMaxCharge(BaseUnit):
                     0,
                 )
         return power_charge
+
+    def set_dispatch_plan(
+        self, marketconfig: MarketConfig, orderbook: Orderbook
+    ) -> None:
+        """Updates the SOC for storage units."""
+        super().set_dispatch_plan(marketconfig, orderbook)
+
+        if not orderbook:
+            return
+
+        # also update the SOC when setting the dispatch plan
+        start = min(order["start_time"] for order in orderbook)
+        end = max(order["end_time"] for order in orderbook)
+        # end includes the end of the last product, to get the last products' start time we deduct the frequency once
+        end_excl = end - self.index.freq
+        time_delta = self.index.freq / timedelta(hours=1)
+
+        for t in self.index[start:end_excl]:
+            next_t = t + self.index.freq
+            # continue if it is the last time step
+            if next_t not in self.index:
+                continue
+            current_power = self.outputs["energy"].at[t]
+
+            # calculate the change in state of charge
+            delta_soc = 0
+            soc = self.outputs["soc"].at[t]
+
+            # discharging
+            if current_power > 0:
+                max_soc_discharge = self.calculate_soc_max_discharge(soc)
+
+                if current_power > max_soc_discharge:
+                    current_power = max_soc_discharge
+
+                delta_soc = -current_power * time_delta / self.efficiency_discharge
+
+            # charging
+            elif current_power < 0:
+                max_soc_charge = self.calculate_soc_max_charge(soc)
+
+                if current_power < max_soc_charge:
+                    current_power = max_soc_charge
+
+                delta_soc = -current_power * time_delta * self.efficiency_charge
+
+            # update the values of the state of charge and the energy
+            self.outputs["soc"].at[next_t] = soc + delta_soc
+            self.outputs["energy"].at[t] = current_power
 
 
 class BaseStrategy:
@@ -783,5 +828,6 @@ class LearningConfig(TypedDict):
     noise_dt: int
     action_noise_schedule: str
     trained_policies_save_path: str
+    trained_policies_load_path: str
     early_stopping_steps: int
     early_stopping_threshold: float
