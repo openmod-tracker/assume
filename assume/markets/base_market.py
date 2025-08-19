@@ -479,7 +479,9 @@ class MarketRole(MarketMechanism, Role):
         )
         logger.debug("Sent registration reply to agent '%s': %s", agent_addr, msg)
 
-    def handle_schedule(self, content: Schedule, meta: MetaDict):
+    def handle_schedule(self, content: dict, meta: MetaDict):
+        # example schedule
+        # schedule = {datetime(2021, 1, 1): -100, datetime(2021, 1, 1, 12): 100, datetime(2021, 1, 1, 16): 0}
         # TODO store schedule
         self.battery_schedules = []
         self.battery_schedules.append(content)
