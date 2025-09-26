@@ -1,10 +1,15 @@
 name,technology,node,bidding_EOM,bidding_redispatch,fuel_type,max_power,min_power,additional_cost,unit_operator,emission_factor,efficiency
-Wind 0,lignite,north,naive_eom,naive_redispatch,renewable,20000.0,0,0,wind operator,0,1.0
-Diesel 0,diesel,north,naive_eom,naive_redispatch,diesel,1000.0,0,65,diesel operator,0,0.3
-Diesel 1,diesel,north,redispatch_learning,redispatch_learning,diesel,1000.0,0,66,diesel operator,0,0.3
-Diesel 2,diesel,north,naive_eom,naive_redispatch,diesel,1000.0,0,67,diesel operator,0,0.3
-Diesel 3,diesel,north,naive_eom,naive_redispatch,diesel,1000.0,0,68,diesel operator,0,0.3
-Diesel 4,diesel,north,naive_eom,naive_redispatch,diesel,1000.0,0,69,diesel operator,0,0.3
+Wind Onshore,wind_onshore,north,naive_eom,naive_redispatch,renewable,30000.0,0,0,wind operator,0,1.0
+Diesel 0,diesel,north,naive_eom,naive_redispatch,diesel,1000.0,0,60,diesel operator,0,0.3
+Diesel 1,diesel,north,redispatch_learning,redispatch_learning,diesel,1000.0,0,61,diesel operator,0,0.3
+Diesel 2,diesel,north,naive_eom,naive_redispatch,diesel,1000.0,0,62,diesel operator,0,0.3
+Diesel 3,diesel,north,naive_eom,naive_redispatch,diesel,1000.0,0,63,diesel operator,0,0.3
+Diesel 4,diesel,north,naive_eom,naive_redispatch,diesel,1000.0,0,64,diesel operator,0,0.3
+Diesel 5,diesel,north,naive_eom,naive_redispatch,diesel,1000.0,0,65,diesel operator,0,0.3
+Diesel 6,diesel,north,naive_eom,naive_redispatch,diesel,1000.0,0,66,diesel operator,0,0.3
+Diesel 7,diesel,north,naive_eom,naive_redispatch,diesel,1000.0,0,67,diesel operator,0,0.3
+Diesel 8,diesel,north,naive_eom,naive_redispatch,diesel,1000.0,0,68,diesel operator,0,0.3
+Diesel 9,diesel,north,naive_eom,naive_redispatch,diesel,1000.0,0,69,diesel operator,0,0.3
 Gas 0,natural gas,south,naive_eom,naive_redispatch,natural gas,1000.0,0,40,gas operator,0,0.4
 Gas 1,natural gas,south,naive_eom,naive_redispatch,natural gas,1000.0,0,41,gas operator,0,0.4
 Gas 2,natural gas,south,naive_eom,naive_redispatch,natural gas,1000.0,0,42,gas operator,0,0.4
@@ -25,11 +30,6 @@ Gas 16,natural gas,south,naive_eom,naive_redispatch,natural gas,1000.0,0,56,gas 
 Gas 17,natural gas,south,naive_eom,naive_redispatch,natural gas,1000.0,0,57,gas operator,0,0.4
 Gas 18,natural gas,south,naive_eom,naive_redispatch,natural gas,1000.0,0,58,gas operator,0,0.4
 Gas 19,natural gas,south,naive_eom,naive_redispatch,natural gas,1000.0,0,59,gas operator,0,0.4
-Gas 20,natural gas,south,naive_eom,naive_redispatch,natural gas,1000.0,0,60,gas operator,0,0.4
-Gas 21,natural gas,south,naive_eom,naive_redispatch,natural gas,1000.0,0,61,gas operator,0,0.4
-Gas 22,natural gas,south,naive_eom,naive_redispatch,natural gas,1000.0,0,62,gas operator,0,0.4
-Gas 23,natural gas,south,naive_eom,naive_redispatch,natural gas,1000.0,0,63,gas operator,0,0.4
-Gas 24,natural gas,south,naive_eom,naive_redispatch,natural gas,1000.0,0,64,gas operator,0,0.4
 Coal 0,lignite,north,naive_eom,naive_redispatch,lignite,1000.0,0,20,coal operator,0,0.5
 Coal 1,lignite,north,naive_eom,naive_redispatch,lignite,1000.0,0,21,coal operator,0,0.5
 Coal 2,lignite,north,naive_eom,naive_redispatch,lignite,1000.0,0,22,coal operator,0,0.5

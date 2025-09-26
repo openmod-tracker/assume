@@ -38,8 +38,8 @@ scenario = "2_nodes"
 
 # powerplant units according to example in Hirth and Schlecht (2024)
 num_wind = 1
-num_diesel = 5
-num_gas = 25
+num_diesel = 10
+num_gas = 20
 num_coal = 20
 num_all = num_wind + num_diesel + num_gas + num_coal
 
@@ -136,16 +136,16 @@ for study_case in [
         redispatch_bidding_list[num_wind + 1] = "redispatch_learning"
 
     mc_wind_list = [0 for i in range(num_wind)]
-    mc_diesel_list = [65 + i for i in range(num_diesel)]
+    mc_diesel_list = [60 + i for i in range(num_diesel)]
     mc_gas_list = [40 + i for i in range(num_gas)]
     mc_coal_list = [20 + i for i in range(num_coal)]
     # Create the data
     powerplant_units_data = {
-        "name": [f"Wind {i}" for i in range(num_wind)]
+        "name": [f"Wind Onshore" for i in range(num_wind)]
         + [f"Diesel {i}" for i in range(num_diesel)]
         + [f"Gas {i}" for i in range(num_gas)]
         + [f"Coal {i}" for i in range(num_coal)],
-        "technology": ["lignite"] * num_wind # hier vorübergehend technology lignite gemacht um 20 gw 0 marginal cost zu haben und keine Schwankungen durch Wind generation
+        "technology": ["wind_onshore"] * num_wind # hier vorübergehend technology lignite gemacht um 20 gw 0 marginal cost zu haben und keine Schwankungen durch Wind generation
         + ["diesel"] * num_diesel
         + ["natural gas"] * num_gas
         + ["lignite"] * num_coal,
@@ -159,7 +159,7 @@ for study_case in [
         + ["diesel"] * num_diesel
         + ["natural gas"] * num_gas
         + ["lignite"] * num_coal,
-        "max_power": [20000.0] * num_wind + [1000.0] * (num_all - num_wind),
+        "max_power": [30000.0] * num_wind + [1000.0] * (num_all - num_wind),
         "min_power": [0] * num_all,
         "additional_cost": mc_wind_list + mc_diesel_list + mc_gas_list + mc_coal_list,
         "unit_operator": ["wind operator"] * num_wind
@@ -200,8 +200,8 @@ for study_case in [
     )
     # demand_data = pd.DataFrame(
     # {
-    # "demand_north": german_demand_data.loc["2019-01-01 00:00":"2019-02-01 23:45", "demand_EOM"] / 20,
-    # "demand_south": german_demand_data.loc["2019-01-01 00:00":"2019-02-01 23:45", "demand_EOM"] / 10,
+    # "demand_north": german_demand_data.loc["2019-01-01 00:00":"2019-02-01 23:45", "demand_EOM"]*0.3,
+    # "demand_south": german_demand_data.loc["2019-01-01 00:00":"2019-02-01 23:45", "demand_EOM"]*0.7,
     # }
     # )
     demand_data = pd.DataFrame(
@@ -209,7 +209,7 @@ for study_case in [
     )
     demand_data["demand_north"] = [0] * len(demand_data)
     demand_data["demand_south"] = [50000] * len(demand_data)
-    demand_data.index = pd.to_datetime(demand_data.index)
+    demand_data.index = pd.to_datetime(german_demand_data.loc["2019-01-01 00:00":"2019-02-01 23:45"].index)
     demand_data.to_csv(f"{input_path}/{scenario}/demand_df.csv", index=True)
 
     # define the database uri. In this case we are using a local sqlite database
@@ -230,12 +230,7 @@ for study_case in [
     )
 
     if world.learning_config.get("learning_mode", False):
-        run_learning(
-            world,
-            inputs_path=input_path,
-            scenario=scenario,
-            study_case=study_case,
-        )
+        run_learning(world)
 
     # run the simulation
     world.run()
